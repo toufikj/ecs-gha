@@ -50,11 +50,9 @@ jobs:
           echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_OUTPUT
 
-      - name: Set ENVIRONMENT_VARIABLES as an Environment Variable
+      - name: store ENVIRONMENT_VARIABLES as an Environment Variab
         run: |
-          JSON_STRING='${{ env.ENVIRONMENT_VARIABLES }}'
-          ENCODED_JSON=$(echo "$JSON_STRING" | jq -c .)  # Ensures it is a valid JSON one-liner
-          echo "ENVIRONMENT_VARIABLES=$ENCODED_JSON" >> $GITHUB_ENV
+          echo "ENVIRONMENT_VARIABLES=${{ env.ENVIRONMENT_VARIABLES }}" >> $GITHUB_ENV
           
   # Trigger the build and push workflow
   # build-and-push-to-ecr:
@@ -84,3 +82,5 @@ jobs:
       CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
       ENVIRONMENT_VARIABLES: ${{ needs.get-env-vars.outputs.ENVIRONMENT_VARIABLES }}
     secrets: inherit
+    env:
+      ENVIRONMENT_VARIABLES: ${{ env.ENVIRONMENT_VARIABLES }}
