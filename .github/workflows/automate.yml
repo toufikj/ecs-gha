@@ -80,7 +80,5 @@ jobs:
       ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
       ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
       CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
-      ENVIRONMENT_VARIABLES: ${{ needs.get-env-vars.outputs.ENVIRONMENT_VARIABLES }}
-    secrets: inherit
-    env:
       ENVIRONMENT_VARIABLES: ${{ env.ENVIRONMENT_VARIABLES }}
+    secrets: inherit
