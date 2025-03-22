@@ -18,7 +18,7 @@ env:
       {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},
       {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"},
       {"name": "MB_DB_PASS", "value": "${{ secrets.MB_DB_PASS }}"}
-      ]'
+    ]'
 
 permissions:
   contents: read
@@ -28,31 +28,16 @@ jobs:
     name: Get Environment Vars
     runs-on: ubuntu-latest
     outputs:
-      BRAND_NAME: ${{ steps.set-outputs.outputs.BRAND_NAME }}
-      AWS_REGION: ${{ steps.set-outputs.outputs.AWS_REGION }}
-      ECR_REGISTRY: ${{ steps.set-outputs.outputs.ECR_REGISTRY }}
-      ECR_REPOSITORY: ${{ steps.set-outputs.outputs.ECR_REPOSITORY }}
-      ECS_SERVICE: ${{ steps.set-outputs.outputs.ECS_SERVICE }}
-      ECS_CLUSTER: ${{ steps.set-outputs.outputs.ECS_CLUSTER }}
-      ECS_TASK_DEFINITION: ${{ steps.set-outputs.outputs.ECS_TASK_DEFINITION }}
-      CONTAINER_NAME: ${{ steps.set-outputs.outputs.CONTAINER_NAME }}
-
+      AWS_REGION: "${{ env.AWS_REGION }}"
+      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
+      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
+      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
+      ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
+      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
+      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
+      ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
     steps:
-      - name: Set Outputs Using GITHUB_OUTPUT
-        id: set-outputs
-        run: |
-          echo "BRAND_NAME=${{ env.BRAND_NAME }}" >> $GITHUB_OUTPUT
-          echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_OUTPUT
-          echo "ECR_REGISTRY=${{ env.ECR_REGISTRY }}" >> $GITHUB_OUTPUT
-          echo "ECR_REPOSITORY=${{ env.ECR_REPOSITORY }}" >> $GITHUB_OUTPUT
-          echo "ECS_SERVICE=${{ env.ECS_SERVICE }}" >> $GITHUB_OUTPUT
-          echo "ECS_CLUSTER=${{ env.ECS_CLUSTER }}" >> $GITHUB_OUTPUT
-          echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_OUTPUT
-          echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_OUTPUT
-
-      - name: store ENVIRONMENT_VARIABLES as an Environment Variab
-        run: |
-          echo "ENVIRONMENT_VARIABLES=${{ env.ENVIRONMENT_VARIABLES }}" >> $GITHUB_ENV
+      - run: echo "null"
           
   # Trigger the build and push workflow
   # build-and-push-to-ecr:
@@ -80,5 +65,5 @@ jobs:
       ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
       ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
       CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
-      ENVIRONMENT_VARIABLES: ${{ env.ENVIRONMENT_VARIABLES }}
+      ENVIRONMENT_VARIABLES: ${{ needs.get-env-vars.outputs.ENVIRONMENT_VARIABLES }}
     secrets: inherit
