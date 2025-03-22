@@ -55,7 +55,7 @@ jobs:
   # Trigger the update ECS task and service workflow
   update-ecs-task-and-service:
     needs: get-env-vars
-    uses: ./.github/workflows/update-task.yml@main
+    uses: ./.github/workflows/update-task.yml
     with:
       brand_name: ${{ needs.get-env-vars.outputs.BRAND_NAME }}
       aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
