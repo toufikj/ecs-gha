@@ -17,7 +17,8 @@ env:
       {"name": "MB_DB_PORT", "value": "${{ secrets.MB_DB_PORT }}"},
       {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},
       {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"},
-      {"name": "MB_DB_PASS", "value": "${{ secrets.MB_DB_PASS }}"}]'
+      {"name": "MB_DB_PASS", "value": "${{ secrets.MB_DB_PASS }}"}
+      ]'
 
 permissions:
   contents: read
@@ -49,9 +50,11 @@ jobs:
           echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_OUTPUT
 
-      - name: Store ENVIRONMENT_VARIABLES Securely
+      - name: **Set ENVIRONMENT_VARIABLES as an Environment Variable**
         run: |
-          echo "ENVIRONMENT_VARIABLES=${{ env.ENVIRONMENT_VARIABLES }}" >> $GITHUB_ENV
+          JSON_STRING='${{ secrets.ENVIRONMENT_VARIABLES }}'
+          ENCODED_JSON=$(echo "$JSON_STRING" | jq -c .)  # Ensures it is a valid JSON one-liner
+          echo "ENVIRONMENT_VARIABLES=$ENCODED_JSON" >> $GITHUB_ENV
           
   # Trigger the build and push workflow
   # build-and-push-to-ecr:
