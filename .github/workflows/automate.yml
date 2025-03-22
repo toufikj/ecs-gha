@@ -28,6 +28,7 @@ jobs:
     name: Get Environment Vars
     runs-on: ubuntu-latest
     outputs:
+      BRAND_NAME: "${{ env.BRAND_NAME }}"
       AWS_REGION: "${{ env.AWS_REGION }}"
       ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
       ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
