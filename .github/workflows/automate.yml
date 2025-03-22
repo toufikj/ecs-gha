@@ -37,7 +37,26 @@ jobs:
       CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
       ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
     steps:
-      - run: echo "null"
+      - name: Set Outputs
+        id: set-outputs
+        run: |
+          echo "BRAND_NAME=${{ env.BRAND_NAME }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=${{ env.ECR_REGISTRY }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=${{ env.ECR_REPOSITORY }}" >> $GITHUB_ENV
+          echo "ECS_SERVICE=${{ env.ECS_SERVICE }}" >> $GITHUB_ENV
+          echo "ECS_CLUSTER=${{ env.ECS_CLUSTER }}" >> $GITHUB_ENV
+          echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_ENV
+          echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
+
+          echo "::set-output name=BRAND_NAME::${{ env.BRAND_NAME }}"
+          echo "::set-output name=AWS_REGION::${{ env.AWS_REGION }}"
+          echo "::set-output name=ECR_REGISTRY::${{ env.ECR_REGISTRY }}"
+          echo "::set-output name=ECR_REPOSITORY::${{ env.ECR_REPOSITORY }}"
+          echo "::set-output name=ECS_SERVICE::${{ env.ECS_SERVICE }}"
+          echo "::set-output name=ECS_CLUSTER::${{ env.ECS_CLUSTER }}"
+          echo "::set-output name=ECS_TASK_DEFINITION::${{ env.ECS_TASK_DEFINITION }}"
+          echo "::set-output name=CONTAINER_NAME::${{ env.CONTAINER_NAME }}"
 
   # Trigger the build and push workflow
   # build-and-push-to-ecr:
