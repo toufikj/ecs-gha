@@ -52,7 +52,7 @@ jobs:
 
       - name: Set ENVIRONMENT_VARIABLES as an Environment Variable
         run: |
-          JSON_STRING='${{ secrets.ENVIRONMENT_VARIABLES }}'
+          JSON_STRING='${{ env.ENVIRONMENT_VARIABLES }}'
           ENCODED_JSON=$(echo "$JSON_STRING" | jq -c .)  # Ensures it is a valid JSON one-liner
           echo "ENVIRONMENT_VARIABLES=$ENCODED_JSON" >> $GITHUB_ENV
           
