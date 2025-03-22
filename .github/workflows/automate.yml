@@ -1,0 +1,70 @@
+name: Prod Automate Build-Push, Update-Task
+
+on:
+  workflow_dispatch:
+
+env:
+  BRAND_NAME: "TOUFIK"
+  AWS_REGION: "ap-south-1"
+  ECR_REGISTRY: "778152842232.dkr.ecr.ap-south-1.amazonaws.com"
+  ECR_REPOSITORY: "stage-metabase"
+  ECS_SERVICE: "stage-metabase-service"
+  ECS_CLUSTER: "demo"
+  ECS_TASK_DEFINITION: "stage-metabase-task"
+  CONTAINER_NAME: "metabase"
+  ENVIRONMENT_VARIABLES:   '[
+      {"name": "DB_HOST", "value": "${{ secrets.DB_HOST }}"},
+      {"name": "DB_PORT", "value": "${{ secrets.DB_PORT }}"},
+      {"name": "DB_NAME", "value": "${{ secrets.DB_NAME }}"},
+      {"name": "DB_USER", "value": "${{ secrets.DB_USER }}"},
+      {"name": "DB_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}"}]'
+
+permissions:
+  contents: read
+
+jobs:
+  get-env-vars:
+    name: Get Environment Vars
+    runs-on: ubuntu-latest
+    outputs:
+      BRAND_NAME: "${{ env.BRAND_NAME }}"
+      AWS_REGION: "${{ env.AWS_REGION }}"
+      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
+      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
+      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
+      ECS_CLUSTER: "prod-babymd-ecs-cluster-01" # "${{ env.ECS_CLUSTER }}"
+      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
+      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
+      ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
+    steps:
+      - run: echo "null"
+
+  # Trigger the build and push workflow
+  build-and-push-to-ecr:
+    needs: get-env-vars
+    uses: ./.github/workflows/build-and-push.yml@main
+    with:
+      ecr-registry: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
+      ecr-repository: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
+      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+      image-tag: "${{ github.run_number }}"
+      dockerfile-path: "./"  # Specify the Dockerfile path
+      brand_name: "${{ needs.get-env-vars.outputs.BRAND_NAME }}"
+    secrets: inherit
+
+  # Trigger the update ECS task and service workflow
+  update-ecs-task-and-service:
+    needs: [build-and-push-to-ecr, get-env-vars]
+    uses: ./.github/workflows/update-task.yml@main
+    with:
+      brand_name: ${{ needs.get-env-vars.outputs.BRAND_NAME }}
+      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+      ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
+      ECS_CLUSTER_NAME: "prod-babymd-ecs-cluster-01"
+      ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
+      CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
+      NEW_IMAGE_TAG: "${{ github.run_number }}"
+      ENVIRONMENT_VARIABLES: ${{ needs.get-env-vars.outputs.ENVIRONMENT_VARIABLES }}
+    secrets: inherit
