@@ -3,11 +3,6 @@ name: Update ECS Task Definition
 on:
   workflow_call:
     inputs:
-      NEW_IMAGE_TAG:
-        description: 'Add the image tag/ github run number'
-        required: true
-        type: string
-
       ECR_REGISTRY:
         description: 'The Amazon ECS cluster name'
         required: true
@@ -106,7 +101,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: ${{ inputs.CONTAINER_NAME }}
-          image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}:${{ inputs.NEW_IMAGE_TAG }}
+          image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}
           environment-variables: ${{ env.PARSED_ENV }}                      
             
            
