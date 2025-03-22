@@ -36,8 +36,12 @@ jobs:
       ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
       ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
       CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
+      ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
     steps:
-      - run: echo "null"
+      - name: Store ENVIRONMENT_VARIABLES in GITHUB_ENV
+        run: |
+          echo "ENVIRONMENT_VARIABLES=$(jq -c . <<< '${{ env.ENVIRONMENT_VARIABLES }}')" >> $GITHUB_ENV
+
 
   # Trigger the update ECS task and service workflow
   update-ecs-task-and-service:
