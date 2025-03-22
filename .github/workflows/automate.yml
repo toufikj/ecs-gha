@@ -27,39 +27,32 @@ jobs:
     name: Get Environment Vars
     runs-on: ubuntu-latest
     outputs:
-      BRAND_NAME: "${{ env.BRAND_NAME }}"
-      AWS_REGION: "${{ env.AWS_REGION }}"
-      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
-      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
-      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
-      ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
-      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
-      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
-      ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
+      BRAND_NAME: ${{ steps.set-outputs.outputs.BRAND_NAME }}
+      AWS_REGION: ${{ steps.set-outputs.outputs.AWS_REGION }}
+      ECR_REGISTRY: ${{ steps.set-outputs.outputs.ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ steps.set-outputs.outputs.ECR_REPOSITORY }}
+      ECS_SERVICE: ${{ steps.set-outputs.outputs.ECS_SERVICE }}
+      ECS_CLUSTER: ${{ steps.set-outputs.outputs.ECS_CLUSTER }}
+      ECS_TASK_DEFINITION: ${{ steps.set-outputs.outputs.ECS_TASK_DEFINITION }}
+      CONTAINER_NAME: ${{ steps.set-outputs.outputs.CONTAINER_NAME }}
+
     steps:
-      - name: Set Outputs
+      - name: Set Outputs Using GITHUB_OUTPUT
         id: set-outputs
         run: |
-          echo "BRAND_NAME=${{ env.BRAND_NAME }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_ENV
-          echo "ECR_REGISTRY=${{ env.ECR_REGISTRY }}" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=${{ env.ECR_REPOSITORY }}" >> $GITHUB_ENV
-          echo "ECS_SERVICE=${{ env.ECS_SERVICE }}" >> $GITHUB_ENV
-          echo "ECS_CLUSTER=${{ env.ECS_CLUSTER }}" >> $GITHUB_ENV
-          echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_ENV
-          echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_ENV
+          echo "BRAND_NAME=${{ env.BRAND_NAME }}" >> $GITHUB_OUTPUT
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=${{ env.ECR_REGISTRY }}" >> $GITHUB_OUTPUT
+          echo "ECR_REPOSITORY=${{ env.ECR_REPOSITORY }}" >> $GITHUB_OUTPUT
+          echo "ECS_SERVICE=${{ env.ECS_SERVICE }}" >> $GITHUB_OUTPUT
+          echo "ECS_CLUSTER=${{ env.ECS_CLUSTER }}" >> $GITHUB_OUTPUT
+          echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_OUTPUT
+          echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Store ENVIRONMENT_VARIABLES Securely
+        run: |
           echo "ENVIRONMENT_VARIABLES=${{ env.ENVIRONMENT_VARIABLES }}" >> $GITHUB_ENV
-
-          echo "::set-output name=BRAND_NAME::${{ env.BRAND_NAME }}"
-          echo "::set-output name=AWS_REGION::${{ env.AWS_REGION }}"
-          echo "::set-output name=ECR_REGISTRY::${{ env.ECR_REGISTRY }}"
-          echo "::set-output name=ECR_REPOSITORY::${{ env.ECR_REPOSITORY }}"
-          echo "::set-output name=ECS_SERVICE::${{ env.ECS_SERVICE }}"
-          echo "::set-output name=ECS_CLUSTER::${{ env.ECS_CLUSTER }}"
-          echo "::set-output name=ECS_TASK_DEFINITION::${{ env.ECS_TASK_DEFINITION }}"
-          echo "::set-output name=CONTAINER_NAME::${{ env.CONTAINER_NAME }}"
-          echo "::set-output name=ENVIRONMENT_VARIABLES::${{ env.ENVIRONMENT_VARIABLES }}"
-
+          
   # Trigger the build and push workflow
   # build-and-push-to-ecr:
   #   needs: get-env-vars
