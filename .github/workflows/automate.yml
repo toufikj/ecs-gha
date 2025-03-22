@@ -50,7 +50,7 @@ jobs:
           echo "ECS_TASK_DEFINITION=${{ env.ECS_TASK_DEFINITION }}" >> $GITHUB_OUTPUT
           echo "CONTAINER_NAME=${{ env.CONTAINER_NAME }}" >> $GITHUB_OUTPUT
 
-      - name: **Set ENVIRONMENT_VARIABLES as an Environment Variable**
+      - name: Set ENVIRONMENT_VARIABLES as an Environment Variable
         run: |
           JSON_STRING='${{ secrets.ENVIRONMENT_VARIABLES }}'
           ENCODED_JSON=$(echo "$JSON_STRING" | jq -c .)  # Ensures it is a valid JSON one-liner
