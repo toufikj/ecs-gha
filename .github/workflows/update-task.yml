@@ -65,6 +65,9 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
+      - name: Debug - Print ENVIRONMENT_VARIABLES
+        run: echo "Received ENVIRONMENT_VARIABLES: ${{ secrets.ENVIRONMENT_VARIABLES }}"  
+
       - name: Parse JSON Environment Variables
         id: parse-env
         run: |
