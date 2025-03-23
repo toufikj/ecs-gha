@@ -50,18 +50,33 @@ on:
 jobs:
   update-task:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # - name: Debug - Print ENVIRONMENT_VARIABLES
-      #   run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
+      - name: Download JSON File
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-variables
+          path: .
 
-      - name: Write ENVIRONMENT_VARIABLES to JSON File
-        run: echo "$ENVIRONMENT_VARIABLES" > env.json
-
-      - name: Update ECS Task Definition
+      - name: Confirm JSON File Transfer
         run: |
-          NEW_TASK_DEF=$(jq --argjson ENV_VARS "$(cat env.json)" \
-            '.containerDefinitions[0].environment |= $ENV_VARS' task-definition.json)
-          echo "$NEW_TASK_DEF" > new-task-definition.json
+          if [ -f "env.json" ]; then
+            echo "✅ JSON file transferred successfully!"
+          else
+            echo "❌ JSON file is missing!"
+            exit 1
+          fi
+
+      - name: Display JSON File
+        run: cat env.json
+
+      - name: Render ECS Task Definition
+        run: |
+          jq '.containerDefinitions[0].environment |= $ENV_VARS' \
+            --argjson ENV_VARS "$(cat env.json)" task-definition.json > new-task-definition.json
+
+      - name: Display Updated Task Definition
+        run: cat new-task-definition.json
