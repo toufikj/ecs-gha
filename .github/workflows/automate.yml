@@ -1,8 +1,10 @@
-name: Deploy to ECS
-on: workflow_dispatch
+name: Prod Automate Build-Push, Update-Task
 
-# Centralized environment configuration
+on:
+  workflow_dispatch:
+
 env:
+  BRAND_NAME: "TOUFIK"
   AWS_REGION: "ap-south-1"
   ECR_REGISTRY: "metabase"
   ECR_REPOSITORY: "metabase"
@@ -10,16 +12,17 @@ env:
   ECS_CLUSTER: "demo"
   ECS_TASK_DEFINITION: "stage-metabase-task"
   CONTAINER_NAME: "metabase"
-  BRAND_NAME: "TOUFIK"
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  get-env-vars:
     runs-on: ubuntu-latest
+    outputs:
+      environment_vars: ${{ steps.generate-env.outputs.env_json }}
     steps:
-      - name: Generate Environment Variables JSON
+      - name: Generate Environment Variables
         id: generate-env
         run: |
           ENV_JSON=$(jq -n \
@@ -29,14 +32,15 @@ jobs:
             --arg db_user "${{ secrets.MB_DB_USER }}" \
             --arg db_pass "${{ secrets.MB_DB_PASS }}" \
             '[{name: "MB_DB_HOST", value: $db_host}, {name: "MB_DB_PORT", value: $db_port}, {name: "MB_DB_DBNAME", value: $db_name}, {name: "MB_DB_USER", value: $db_user}, {name: "MB_DB_PASS", value: $db_pass}]')
-          echo "ENV_JSON=$ENV_JSON" >> $GITHUB_OUTPUT
+          echo "env_json=$ENV_JSON" >> $GITHUB_OUTPUT
 
-      - name: Trigger Reusable Workflow
-        uses: ./.github/workflows/update-task.yml
-        with:
-          aws_region: ${{ env.AWS_REGION }}
-          brand_name: ${{ env.BRAND_NAME }}
-          environment_variables: ${{ steps.generate-env.outputs.ENV_JSON }}
-        secrets:
-          AWS_ACCESS_KEY_ID: ${{ secrets.TOUFIK_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.TOUFIK_AWS_SECRET_ACCESS_KEY }}
+  update-ecs-task-and-service:
+    needs: get-env-vars
+    uses: ./.github/workflows/update-task.yml
+    with:
+      brand_name: ${{ env.BRAND_NAME }}
+      aws_region: ${{ env.AWS_REGION }}
+      environment_vars: ${{ needs.get-env-vars.outputs.environment_vars }}
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.TOUFIK_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.TOUFIK_AWS_SECRET_ACCESS_KEY }}
