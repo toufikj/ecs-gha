@@ -89,8 +89,9 @@ jobs:
         id: parse-env
         run: |
           echo "ENV_VARS<<"EOF" >> $GITHUB_ENV
-          jq -r 'map("\(.name)=\(.value)") | join("\n")' env.json >> $GITHUB_ENV
+          jq -r 'map("\(.name)=\(.value)") | join("\n")' env.json | tee -a $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
           
       - name: Debug - Print Extracted Environment Variables
         run: echo "$ENV_VARS"
