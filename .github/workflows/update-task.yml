@@ -89,9 +89,7 @@ jobs:
         id: parse-env
         run: |
           ENV_VARS=$(jq -r '.ENVIRONMENT_VARIABLES | map("\(.name)=\(.value)") | join("\n")' env.json)
-          echo "env_vars<<EOF" >> $GITHUB_ENV
           echo "$ENV_VARS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
 
       - name: Render New ECS Task Definition
