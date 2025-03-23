@@ -22,6 +22,22 @@ env:
   ]'
 
 jobs:
+  get-env-vars:
+    name: Get Environment Vars
+    runs-on: ubuntu-latest
+    outputs:
+      BRAND_NAME: "${{ env.BRAND_NAME }}"
+      AWS_REGION: "${{ env.AWS_REGION }}"
+      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
+      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
+      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
+      ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
+      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
+      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
+      ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
+    steps:
+      - run: echo "null"
+
   create-json:
     name: Generate JSON File
     runs-on: ubuntu-latest
@@ -47,10 +63,10 @@ jobs:
           path: env.json
 
   update-ecs-task-and-service:
-    needs: create-json
+    needs: [create-json, get-env-vars]
     uses: ./.github/workflows/update-task.yml  # ✅ Calls reusable workflow
     with:
-      brand_name: ${{inputs.brand_name}}
+      brand_name: ${{ needs.get-env-vars.outputs.BRAND_NAME }}
       aws_region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
       ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
       ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
