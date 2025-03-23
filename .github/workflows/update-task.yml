@@ -18,14 +18,6 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
-env:
-  ECR_REGISTRY: "metabase"
-  ECR_REPOSITORY: "metabase"
-  ECS_SERVICE: "stage-metabase-service"
-  ECS_CLUSTER: "demo"
-  ECS_TASK_DEFINITION: "stage-metabase-task"
-  CONTAINER_NAME: "metabase"
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -40,7 +32,7 @@ jobs:
       - name: Render Task Definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: ${{ inputs.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
           environment-variables: ${{ inputs.environment_vars }}
