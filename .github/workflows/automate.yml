@@ -51,7 +51,7 @@ jobs:
     uses: ./.github/workflows/update-task.yml  # ✅ Calls reusable workflow
     with:
       brand_name: ${{inputs.brand_name}}
-      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+      aws_region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
       ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
       ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
       ECS_CLUSTER_NAME: ${{ needs.get-env-vars.outputs.ECS_CLUSTER }}
