@@ -19,27 +19,19 @@ on:
         required: true
 
 jobs:
-  deploy:
+  update-task:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ inputs.aws_region }}
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Render Task Definition
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ inputs.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
-          environment-variables: ${{ inputs.environment_vars }}
+      - name: Debug - Print ENVIRONMENT_VARIABLES
+        run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
 
-      - name: Deploy to ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+      - name: Update ECS Task Definition
+        run: |
+          echo "[${ENVIRONMENT_VARIABLES}]" > env.json
+          NEW_TASK_DEF=$(jq '.containerDefinitions[0].environment |= $ENV_VARS' \
+            --argjson ENV_VARS "$(cat env.json)" \
+            task-definition.json)
+          echo "$NEW_TASK_DEF" > new-task-definition.json
