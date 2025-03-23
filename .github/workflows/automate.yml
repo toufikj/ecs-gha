@@ -13,44 +13,37 @@ env:
   ECS_TASK_DEFINITION: "stage-metabase-task"
   CONTAINER_NAME: "metabase"
 
-permissions:
-  contents: read
+  MB_DB_HOST: "${{ secrets.MB_DB_HOST }}"
+  MB_DB_PORT: "${{ secrets.MB_DB_PORT }}"
+  MB_DB_DBNAME: "${{ secrets.MB_DB_DBNAME }}"
+  MB_DB_USER: "${{ secrets.MB_DB_USER }}"
+  MB_DB_PASS: "${{ secrets.MB_DB_PASS }}"
 
 jobs:
-  get-env-vars:
-    name: Get Environment Vars
+  create-json:
+    name: Generate JSON File
     runs-on: ubuntu-latest
-    outputs:
-      BRAND_NAME: "${{ env.BRAND_NAME }}"
-      AWS_REGION: "${{ env.AWS_REGION }}"
-      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
-      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
-      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
-      ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
-      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
-      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
 
     steps:
-      - name: Store ENVIRONMENT_VARIABLES in GITHUB_ENV
-        run: |
-          echo 'ENVIRONMENT_VARIABLES=[
-            {"name": "MB_DB_HOST", "value": "${{ secrets.MB_DB_HOST }}"},
-            {"name": "MB_DB_PORT", "value": "${{ secrets.MB_DB_PORT }}"},
-            {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},
-            {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"},
-            {"name": "MB_DB_PASS", "value": "${{ secrets.MB_DB_PASS }}"}
-          ]' >> $GITHUB_ENV
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-  update-ecs-task-and-service:
-    needs: get-env-vars
-    uses: ./.github/workflows/update-task.yml
-    with:
-      brand_name: ${{ needs.get-env-vars.outputs.BRAND_NAME }}
-      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
-      ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
-      ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
-      ECS_CLUSTER_NAME: ${{ needs.get-env-vars.outputs.ECS_CLUSTER }}
-      ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
-      ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
-      CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
-    secrets: inherit  # ✅ ENVIRONMENT_VARIABLES is automatically available
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Convert All Global `env` Variables to JSON
+        run: |
+          echo "{" > env.json
+          printenv | grep '^MB_DB_' | awk -F= '{print "  \""$1"\": \""$2"\","}' >> env.json
+          sed -i '$ s/,$//' env.json  # Remove the last comma
+          echo "}" >> env.json
+
+      - name: Display JSON File
+        run: cat env.json
+
+      - name: Upload JSON as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: environment-variables
+          path: env.json
+
