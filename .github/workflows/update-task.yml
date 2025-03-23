@@ -84,11 +84,15 @@ jobs:
         id: get-task-def
         run: |
           aws ecs describe-task-definition --task-definition ${{ inputs.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
-      - name: Parse env.json and format environment variables
+      
+      - name: Parse `env.json` and Format Environment Variables
         id: parse-env
         run: |
-          ENV_VARS=$(jq -r '.ENVIRONMENT_VARIABLES[] | "\(.name)=\(.value)"' env.json)
-          echo "env_vars=$ENV_VARS" >> $GITHUB_ENV  
+          ENV_VARS=$(jq -r '.ENVIRONMENT_VARIABLES | map("\(.name)=\(.value)") | join("\n")' env.json)
+          echo "env_vars<<EOF" >> $GITHUB_ENV
+          echo "$ENV_VARS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
 
       - name: Render New ECS Task Definition
         id: task-def
