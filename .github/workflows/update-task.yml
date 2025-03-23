@@ -25,8 +25,8 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Debug - Print ENVIRONMENT_VARIABLES
-        run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
+      # - name: Debug - Print ENVIRONMENT_VARIABLES
+      #   run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
 
       - name: Write ENVIRONMENT_VARIABLES to JSON File
         run: echo "$ENVIRONMENT_VARIABLES" > env.json
