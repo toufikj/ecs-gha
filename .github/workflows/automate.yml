@@ -24,7 +24,7 @@ env:
 jobs:
   create-json:
     name: Generate JSON File
-    runs-on: ubuntu-latest  # ✅ Uses a stable runner version
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
@@ -41,7 +41,21 @@ jobs:
         run: cat env.json
 
       - name: Upload JSON as Artifact
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: environment-variables
           path: env.json
+
+  update-ecs-task-and-service:
+    needs: create-json
+    uses: ./.github/workflows/update-task.yml  # ✅ Calls reusable workflow
+    with:
+      brand_name: ${{inputs.brand_name}}
+      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+      ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
+      ECS_CLUSTER_NAME: ${{ needs.get-env-vars.outputs.ECS_CLUSTER }}
+      ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
+      CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
+    secrets: inherit
