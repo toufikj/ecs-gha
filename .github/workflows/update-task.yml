@@ -89,8 +89,9 @@ jobs:
         id: parse-env
         run: |
           ENV_VARS=$(jq -r 'map("\(.name)=\(.value)") | join("\n")' env.json)
-          echo "$ENV_VARS" >> $GITHUB_ENV
-
+          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
+      - name: Debug - Print Extracted Environment Variables
+        run: echo "$ENV_VARS"
 
 
       - name: Render New ECS Task Definition
@@ -100,7 +101,7 @@ jobs:
           task-definition: task-definition.json
           container-name: ${{ inputs.CONTAINER_NAME }}
           image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}:${{ inputs.NEW_IMAGE_TAG }}
-          environment-variables: ${{ env.env_vars }}
+          environment-variables: ${{ env.ENV_VARS }}
 
       - name: Deploy Amazon ECS Task Definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
