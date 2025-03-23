@@ -22,25 +22,27 @@ env:
 jobs:
   create-json:
     name: Generate JSON File
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # ✅ Uses a stable runner version
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Convert All Global `env` Variables to JSON
+      - name: Convert Global Env Variables to JSON
         run: |
-          echo "{" > env.json
+          echo '{' > env.json
           printenv | grep '^MB_DB_' | awk -F= '{print "  \""$1"\": \""$2"\","}' >> env.json
-          sed -i '$ s/,$//' env.json  # Remove the last comma
-          echo "}" >> env.json
+          sed -i '$ s/,$//' env.json  # Remove last comma
+          echo '}' >> env.json
 
       - name: Display JSON File
         run: cat env.json
 
       - name: Upload JSON as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # ✅ Updated to v4
         with:
           name: environment-variables
           path: env.json
-
