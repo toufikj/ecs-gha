@@ -1,119 +1,53 @@
-name: Update ECS Task Definition
-
+name: Update ECS Task
 on:
   workflow_call:
     inputs:
-      ECR_REGISTRY:
-        description: 'The Amazon ECS cluster name'
+      aws_region:
         required: true
         type: string
-
-      ECR_REPOSITORY:
-        description: 'The Amazon ECS cluster name'
-        required: true
-        type: string  
-
-      ECS_CLUSTER_NAME:
-        description: 'The Amazon ECS cluster name'
-        required: true
-        type: string
-
-      ECS_TASK_DEFINITION:
-        description: 'The Amazon ECS task def name'
-        required: true
-        type: string
-
-      ECS_SERVICE_NAME:
-        description: 'The Amazon ECS service name'
-        required: true
-        type: string
-
-      CONTAINER_NAME:
-        description: 'The Amazon ECS container name'
-        required: true
-        type: string
-  
-      aws-region:
-        description: 'The AWS region'
-        required: true
-        type: string
-
       brand_name:
-        description: 'select the brand'
         required: true
         type: string
+      environment_variables:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
-      ENVIRONMENT_VARIABLES:
-        description: 'envs required for task'
-        type: string  
+# Reusable envs to avoid repetition
+env:
+  ECR_REGISTRY: "metabase"
+  ECR_REPOSITORY: "metabase"
+  ECS_SERVICE: "stage-metabase-service"
+  ECS_CLUSTER: "demo"
+  ECS_TASK_DEFINITION: "stage-metabase-task"
+  CONTAINER_NAME: "metabase"
+
 jobs:
   deploy:
-    name: Update ECS Task Definition and Deploy to ECS
     runs-on: ubuntu-latest
-  
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', inputs.brand_name)] }}
-          aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', inputs.brand_name)] }}
-          aws-region: ap-south-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws_region }}
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Debug - Print ENVIRONMENT_VARIABLES
-        run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
-
-      - name: Parse JSON Environment Variables
-        id: parse-env
-        run: |
-          # Parse the input JSON and construct newline-separated key=value pairs
-          echo '${{ inputs.ENVIRONMENT_VARIABLES }}' | jq -r '.[] | "\(.name)=\(.value)"' > parsed-env.txt
-
-          # Debugging: Print the parsed environment variables
-          cat parsed-env.txt
-
-          # Export the parsed variables as an environment variable
-          echo "PARSED_ENV=$(cat parsed-env.txt)" >> $GITHUB_ENV
-          
-      # - name: Parse JSON Environment Variables
-      #   id: parse-env
-      #   run: |
-      #     # Parse the input JSON
-      #     PARSED_ENV=$(echo '${{ inputs.ENVIRONMENT_VARIABLES }}' | jq -r '.[] | "\(.name)=\(.value)"' | paste -sd "," -)
-          
-      #     # Export the parsed variables as a single string
-      #     echo "PARSED_ENV=\"$PARSED_ENV\"" >> $GITHUB_ENV
-
-      # - name: Verify PARSED_ENV
-      #   run: |
-      #     echo "Environment Variables Combined: $PARSED_ENV"
-          
-      - name: Get the current ECS task definition
-        id: get-task-def
-        run: |
-          aws ecs describe-task-definition --task-definition ${{ inputs.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
+      - name: Render Task Definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
-          container-name: ${{ inputs.CONTAINER_NAME }}
-          image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}
-          environment-variables: ${{ env.PARSED_ENV }}                      
-            
-           
-      - name: Deploy Amazon ECS task definition
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+          environment-variables: ${{ inputs.environment_variables }}
+
+      - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ inputs.ECS_SERVICE_NAME }}
-          cluster: ${{ inputs.ECS_CLUSTER_NAME }}
-          wait-for-service-stability: true
-
-         
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
