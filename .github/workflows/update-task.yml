@@ -28,10 +28,11 @@ jobs:
       - name: Debug - Print ENVIRONMENT_VARIABLES
         run: echo "Received ENVIRONMENT_VARIABLES: $ENVIRONMENT_VARIABLES"
 
+      - name: Write ENVIRONMENT_VARIABLES to JSON File
+        run: echo "$ENVIRONMENT_VARIABLES" > env.json
+
       - name: Update ECS Task Definition
         run: |
-          echo "[${ENVIRONMENT_VARIABLES}]" > env.json
-          NEW_TASK_DEF=$(jq '.containerDefinitions[0].environment |= $ENV_VARS' \
-            --argjson ENV_VARS "$(cat env.json)" \
-            task-definition.json)
+          NEW_TASK_DEF=$(jq --argjson ENV_VARS "$(cat env.json)" \
+            '.containerDefinitions[0].environment |= $ENV_VARS' task-definition.json)
           echo "$NEW_TASK_DEF" > new-task-definition.json
