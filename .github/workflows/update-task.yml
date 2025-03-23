@@ -1,18 +1,52 @@
-name: Update ECS Task Definition
+name: Update ECS Task Definition and Deploy to ECS
 
 on:
   workflow_call:
     inputs:
-      brand_name:
+      
+      ECR_REGISTRY:
+        description: 'The Amazon ECS cluster name'
         required: true
-        type: string
-      aws_region:
-        required: true
-        type: string
-      environment_vars:
-        required: false
         type: string
 
+      ECR_REPOSITORY:
+        description: 'The Amazon ECS cluster name'
+        required: true
+        type: string  
+
+      ECS_CLUSTER_NAME:
+        description: 'The Amazon ECS cluster name'
+        required: true
+        type: string
+
+      ECS_TASK_DEFINITION:
+        description: 'The Amazon ECS task def name'
+        required: true
+        type: string
+
+      ECS_SERVICE_NAME:
+        description: 'The Amazon ECS service name'
+        required: true
+        type: string
+
+      CONTAINER_NAME:
+        description: 'The Amazon ECS container name'
+        required: true
+        type: string
+  
+      aws_region:
+        description: 'The AWS region'
+        required: true
+        type: string
+
+      brand_name:
+        description: 'select the brand'
+        required: true
+        type: string
+
+      # ENVIRONMENT_VARIABLES:
+      #   description: 'envs required for task'
+      #   type: string  
 jobs:
   update-task:
     runs-on: ubuntu-latest
