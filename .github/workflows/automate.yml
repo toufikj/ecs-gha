@@ -18,29 +18,37 @@ permissions:
 
 jobs:
   get-env-vars:
+    name: Get Environment Vars
     runs-on: ubuntu-latest
     outputs:
-      environment_vars: ${{ steps.generate-env.outputs.env_json }}
+      BRAND_NAME: "${{ env.BRAND_NAME }}"
+      AWS_REGION: "${{ env.AWS_REGION }}"
+      ECR_REGISTRY: "${{ env.ECR_REGISTRY }}"
+      ECR_REPOSITORY: "${{ env.ECR_REPOSITORY }}"
+      ECS_SERVICE: "${{ env.ECS_SERVICE }}"
+      ECS_CLUSTER: "${{ env.ECS_CLUSTER }}"
+      ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
+      CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
+
     steps:
-      - name: Generate Environment Variables
-        id: generate-env
+      - name: Store ENVIRONMENT_VARIABLES in GITHUB_ENV
         run: |
-          ENV_JSON=$(jq -n \
-            --arg db_host "${{ secrets.MB_DB_HOST }}" \
-            --arg db_port "${{ secrets.MB_DB_PORT }}" \
-            --arg db_name "${{ secrets.MB_DB_DBNAME }}" \
-            --arg db_user "${{ secrets.MB_DB_USER }}" \
-            --arg db_pass "${{ secrets.MB_DB_PASS }}" \
-            '[{name: "MB_DB_HOST", value: $db_host}, {name: "MB_DB_PORT", value: $db_port}, {name: "MB_DB_DBNAME", value: $db_name}, {name: "MB_DB_USER", value: $db_user}, {name: "MB_DB_PASS", value: $db_pass}]')
-          echo "env_json=$ENV_JSON" >> $GITHUB_OUTPUT
+          echo 'ENVIRONMENT_VARIABLES={"name": "MB_DB_HOST", "value": "${{ secrets.MB_DB_HOST }}"},\
+          {"name": "MB_DB_PORT", "value": "${{ secrets.MB_DB_PORT }}"},\
+          {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},\
+          {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"},\
+          {"name": "MB_DB_PASS", "value": "${{ secrets.MB_DB_PASS }}"}' >> $GITHUB_ENV
 
   update-ecs-task-and-service:
     needs: get-env-vars
     uses: ./.github/workflows/update-task.yml
     with:
-      brand_name: ${{ env.BRAND_NAME }}
-      aws_region: ${{ env.AWS_REGION }}
-      environment_vars: ${{ needs.get-env-vars.outputs.environment_vars }}
-    secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.TOUFIK_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.TOUFIK_AWS_SECRET_ACCESS_KEY }}
+      brand_name: ${{ needs.get-env-vars.outputs.BRAND_NAME }}
+      aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+      ECR_REGISTRY: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
+      ECR_REPOSITORY: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
+      ECS_CLUSTER_NAME: ${{ needs.get-env-vars.outputs.ECS_CLUSTER }}
+      ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
+      ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
+      CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
+    secrets: inherit  # ✅ ENVIRONMENT_VARIABLES is now automatically available in GITHUB_ENV
