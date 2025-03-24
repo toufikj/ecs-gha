@@ -85,11 +85,12 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition ${{ inputs.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
       
-      - name: Parse Environment Variables and Create String
-        id: parse-env
+      - name: Format Environment Variables as `name=value` Pairs
+        id: format-env
         run: |
-          # Convert JSON to comma-separated name-value pairs
+          # Convert JSON to key=value pairs and store as a comma-separated string
           ENV_VARS=$(jq -r '.[] | "\(.name)=\(.value)"' env.json | paste -sd ',' -)
+          echo "Formatted ENV_VARS: $ENV_VARS"
           echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
 
           
