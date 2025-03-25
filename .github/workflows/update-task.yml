@@ -85,13 +85,16 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition ${{ inputs.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
       
-      - name: Convert JSON to ENV format and Save to GitHub Environment
+      - name: Convert JSON to Multi-Line and Save to ECS_ENV_VARS
         run: |
+          echo "Formatting env variables for ECS task..."
+          echo "ECS_ENV_VARS<<"EOF" >> $GITHUB_ENV
           jq -r '.[] | "\(.name)=\(.value)"' env.json >> $GITHUB_ENV
-          echo "✅ Environment variables stored in GitHub Environment in KEY=VALUE format."
+          echo "EOF" >> $GITHUB_ENV
+          echo "✅ Environment variables saved to ECS_ENV_VARS"
 
-      - name: Display Stored Environment Variables (Optional for Debugging)
-        run: cat $GITHUB_ENV
+      - name: Debug - Display ECS_ENV_VARS Content
+        run: echo "$ECS_ENV_VARS"
           
       # - name: Debug - Print Extracted Environment Variables
       #   run: echo "$ENV_VARS"
@@ -104,7 +107,7 @@ jobs:
           task-definition: task-definition.json
           container-name: ${{ inputs.CONTAINER_NAME }}
           image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}:${{ inputs.NEW_IMAGE_TAG }}
-          environment-variables: ${{ env }}
+          environment-variables: ${{ env.ECS_ENV_VARS }}
             
       - name: Deploy Amazon ECS Task Definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
