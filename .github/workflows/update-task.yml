@@ -55,11 +55,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download JSON File
+      - name: Download ENV File
         uses: actions/download-artifact@v4
         with:
           name: environment-variables
           path: .
+
+      - name: Download SECRETS File
+        uses: actions/download-artifact@v4
+        with:
+          name: secrets
+          path: .    
 
       - name: Confirm JSON File Transfer
         run: |
