@@ -17,13 +17,16 @@ env:
     {"name": "MB_DB_HOST", "value": "${{ secrets.MB_DB_HOST }}"},
     {"name": "MB_DB_PORT", "value": "${{ secrets.MB_DB_PORT }}"},
     {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},
-    {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"},
+    {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"}
+  ]'
+
+  SECRETS: '[
     {"name": "MB_DB_PASS", "value": "arn:aws:secretsmanager:ap-south-1:783764579443:secret:db/pass-hTOFPK"}
   ]'
 
 jobs:
   get-env-vars:
-    name: Get Environment Vars
+    name: Get Environment Vars and Secrets
     runs-on: ubuntu-latest
     outputs:
       BRAND_NAME: "${{ env.BRAND_NAME }}"
@@ -35,6 +38,7 @@ jobs:
       ECS_TASK_DEFINITION: "${{ env.ECS_TASK_DEFINITION }}"
       CONTAINER_NAME: "${{ env.CONTAINER_NAME }}"
       ENVIRONMENT_VARIABLES: "${{ env.ENVIRONMENT_VARIABLES }}"
+      SECRETS: "${{ env.SECRETS }}"
     steps:
       - run: echo "null"
 
@@ -49,18 +53,28 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Convert `ENVIRONMENT_VARIABLES` to JSON
+      - name: Convert ENVIRONMENT_VARIABLES and SECRETS to JSON
         run: |
           echo '${{ env.ENVIRONMENT_VARIABLES }}' | jq '.' > env.json
+          echo '${{ env.SECRETS }}' | jq '.' > secrets.json
+          
 
       - name: Display JSON File
-        run: cat env.json
+        run: |
+          cat env.json
+          echo "Secrets--"
+          cat secrets.json
 
       - name: Upload JSON as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: environment-variables
           path: env.json
+      - name: Upload JSON as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secrets
+          path: secrets.json    
 
   update-ecs-task-and-service:
     needs: [create-json, get-env-vars]
