@@ -120,5 +120,4 @@ jobs:
           cluster: ${{ inputs.ECS_CLUSTER_NAME }}
           wait-for-service-stability: true
 
-      - name: Display Updated Task Definition
-        run: cat new-task-definition.json
+      
