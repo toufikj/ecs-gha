@@ -134,7 +134,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: ${{ inputs.CONTAINER_NAME }}
-          image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}:${{ inputs.NEW_IMAGE_TAG }}
+          image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}
           environment-variables: ${{ env.ECS_ENV_VARS }}
           secrets: ${{ env.ECS_SECRETS }}
 
