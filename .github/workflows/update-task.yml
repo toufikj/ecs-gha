@@ -88,10 +88,13 @@ jobs:
       - name: Convert JSON to Multi-Line and Save to ECS_ENV_VARS
         run: |
           echo "Formatting env variables for ECS task..."
-          echo "ECS_ENV_VARS<<"EOF" >> $GITHUB_ENV
-          jq -r '.[] | "\(.name)=\(.value)"' env.json >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          {
+            echo "ECS_ENV_VARS<<EOF"
+            jq -r '.[] | "\(.name)=\(.value)"' env.json
+            echo "EOF"
+          } >> $GITHUB_ENV
           echo "✅ Environment variables saved to ECS_ENV_VARS"
+
 
       - name: Debug - Display ECS_ENV_VARS Content
         run: echo "$ECS_ENV_VARS"
