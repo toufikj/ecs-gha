@@ -70,8 +70,11 @@ jobs:
             exit 1
           fi
 
-      - name: Display JSON File
+      - name: Display Env File
         run: cat env.json
+      - name: Display Secrets File
+        run: cat secrets.json
+        
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -95,9 +98,25 @@ jobs:
           } >> $GITHUB_ENV
           echo "✅ Environment variables saved to ECS_ENV_VARS"
 
+      - name: Check and Parse secrets.json if Present
+        run: |
+          if [ -f "secrets.json" ]; then
+            echo "Formatting secrets for ECS task..."
+            {
+              echo "ECS_SECRETS<<EOF"
+              jq -r '.[] | "\(.name)=\(.value)"' secrets.json
+              echo "EOF"
+            } >> $GITHUB_ENV
+            echo "✅ Secrets saved to ECS_SECRETS"
+          else
+            echo "No secrets.json found. Skipping..."
+          fi    
 
       - name: Debug - Display ECS_ENV_VARS Content
         run: echo "$ECS_ENV_VARS"
+      - name: Debug - Display ECS_SECRETS Content
+        run: echo "$ECS_SECRETS"
+        
           
       # - name: Debug - Print Extracted Environment Variables
       #   run: echo "$ENV_VARS"
@@ -111,6 +130,12 @@ jobs:
           container-name: ${{ inputs.CONTAINER_NAME }}
           image: ${{ inputs.ECR_REGISTRY }}/${{ inputs.ECR_REPOSITORY }}:${{ inputs.NEW_IMAGE_TAG }}
           environment-variables: ${{ env.ECS_ENV_VARS }}
+          secrets: ${{ env.ECS_SECRETS }}
+
+      - name: Display Rendered Task Definition
+        run: |
+          echo "📄 Rendered Task Definition:"
+          cat ${{ steps.task-def.outputs.task-definition }}    
             
       - name: Deploy Amazon ECS Task Definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
