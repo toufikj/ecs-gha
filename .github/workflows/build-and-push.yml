@@ -1,7 +1,7 @@
-name: Build and Push
+name: Build and Push Docker Image to ECR
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       ecr-registry:
         description: 'The Amazon ECR registry URL'
@@ -17,7 +17,7 @@ on:
         type: string
       image-tag:
         description: 'The Docker image tag'
-        required: true
+        required: false
         type: string
       dockerfile-path:
         description: 'The path to the Dockerfile'
@@ -27,6 +27,7 @@ on:
         description: 'select the brand'
         required: true
         type: string
+        default: TOUFIK
 
 jobs:
   build:
@@ -35,6 +36,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: 'Automated Version Bump'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          tag-prefix: 'v'
+          minor-wording:  'MINOR'
+          major-wording:  'MAJOR'
+          patch-wording:  'PATCH'
+          rc-wording:     'BETA'
+        env:
+         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -60,7 +73,7 @@ jobs:
           context: ${{ inputs.dockerfile-path }}
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
-          tags: ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}
+          tags: ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ steps.version-bump.outputs.newTag }}
 
       - name: Image digest
         run: echo ${{ steps.build-and-push.outputs.digest }}
