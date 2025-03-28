@@ -14,15 +14,11 @@ env:
   CONTAINER_NAME: "metabase"
 
   ENVIRONMENT_VARIABLES: '[
-    {"name": "MB_DB_HOST", "value": "${{ secrets.MB_DB_HOST }}"},
-    {"name": "MB_DB_PORT", "value": "${{ secrets.MB_DB_PORT }}"},
     {"name": "MB_DB_DBNAME", "value": "${{ secrets.MB_DB_DBNAME }}"},
     {"name": "MB_DB_USER", "value": "${{ secrets.MB_DB_USER }}"}
   ]'
 
-  SECRETS: '[
-    {"name": "MB_DB_PASS", "value": "arn:aws:secretsmanager:ap-south-1:783764579443:secret:db/pass-hTOFPK"}
-  ]'
+  SECRETS: '[ ]'
 
 jobs:
   get-env-vars:
