@@ -76,7 +76,18 @@ jobs:
             MINOR=$(echo "$CLEAN_TAG" | cut -d. -f2)
             PATCH=$(echo "$CLEAN_TAG" | cut -d. -f3)
             
-            PATCH=$((PATCH + 1))  # Increment patch version
+            if [[ "$PATCH" -lt 10 ]]; then
+              PATCH=$((PATCH + 1))  # Increment patch version
+            else
+              PATCH=0  # Reset patch
+              if [[ "$MINOR" -lt 10 ]]; then
+                MINOR=$((MINOR + 1))  # Increment minor version
+              else
+                MINOR=0  # Reset minor
+                MAJOR=$((MAJOR + 1))  # Increment major version
+              fi
+            fi
+            
             NEW_TAG="v$MAJOR.$MINOR.$PATCH"  # Add "v" prefix
           fi
           
