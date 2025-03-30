@@ -18,17 +18,13 @@ on:
         required: true
         type: string
         default: ap-south-1
-      image-tag:
-        description: 'The Docker image tag'
-        required: false
-        type: string
       dockerfile-path:
         description: 'The path to the Dockerfile'
         required: true
         type: string
         default: .
       brand_name:
-        description: 'select the brand'
+        description: 'Select the brand'
         required: true
         type: string
         default: TOUFIK
@@ -50,9 +46,9 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-            aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', inputs.brand_name)] }}
-            aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', inputs.brand_name)] }}
-            aws-region: ap-south-1
+          aws-access-key-id: ${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', inputs.brand_name)] }}
+          aws-secret-access-key: ${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', inputs.brand_name)] }}
+          aws-region: ${{ inputs.aws-region }}
 
       - name: Log in to Amazon ECR
         id: ecr-login
@@ -64,26 +60,30 @@ jobs:
           REPO_NAME="${{ inputs.ecr-repository }}"
           AWS_REGION="${{ inputs.aws-region }}"
           
-          # Fetch the latest tags from ECR
+          # Fetch all image tags from ECR
           IMAGE_TAGS=$(aws ecr describe-images --repository-name $REPO_NAME --region $AWS_REGION \
             --query 'imageDetails[*].imageTags' --output json | jq -r '.[] | select(.!=null) | .[]' | sort -V)
           
-          # Get the latest tag using semantic versioning
-          LATEST_TAG=$(echo "$IMAGE_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | tail -n1)
+          # Extract the latest semantic version (ignoring non-semantic versions)
+          LATEST_TAG=$(echo "$IMAGE_TAGS" | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1)
           
           if [[ -z "$LATEST_TAG" ]]; then
-            NEW_TAG="1.0.0"  # If no valid semantic version exists, start with 1.0.0
+            NEW_TAG="v1.0.0"  # If no valid semantic version exists, start with v1.0.0
           else
-            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1)
-            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
-            PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+            # Remove "v" prefix if it exists
+            CLEAN_TAG=$(echo "$LATEST_TAG" | sed 's/^v//')
+            MAJOR=$(echo "$CLEAN_TAG" | cut -d. -f1)
+            MINOR=$(echo "$CLEAN_TAG" | cut -d. -f2)
+            PATCH=$(echo "$CLEAN_TAG" | cut -d. -f3)
+            
             PATCH=$((PATCH + 1))  # Increment patch version
-            NEW_TAG="$MAJOR.$MINOR.$PATCH"
+            NEW_TAG="v$MAJOR.$MINOR.$PATCH"  # Add "v" prefix
           fi
           
+          echo "Latest Tag: $LATEST_TAG"
           echo "New Image Tag: $NEW_TAG"
           echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_ENV"
-          
+
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v5.1.0
@@ -91,7 +91,7 @@ jobs:
           context: ${{ inputs.dockerfile-path }}
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
-          tags: ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:v${{ env.IMAGE_TAG }}
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:${{ env.IMAGE_TAG }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:latest
 
-      - name: Image digest
-        run: echo ${{ steps.build-and-push.outputs.digest }}
