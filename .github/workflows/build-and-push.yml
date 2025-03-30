@@ -91,7 +91,7 @@ jobs:
           context: ${{ inputs.dockerfile-path }}
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
-          tags: ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:${{ env.IMAGE_TAG }}
+          tags: ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:v1.0.9   #${{ env.IMAGE_TAG }}
 
       - name: Image digest
         run: echo ${{ steps.build-and-push.outputs.digest }}
