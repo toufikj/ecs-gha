@@ -71,7 +71,7 @@ jobs:
           context: ${{ inputs.dockerfile-path }}
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
-          tags: ${{ inputs.ecr-registry }}/${{ inputs.ecr-repository }}:${{ inputs.image-tag }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Image digest
