@@ -58,12 +58,32 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5.5.0
-        with:
-          images: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repository }}  
-
+      - name: Get Latest Image Tag from ECR and Increment Version
+        id: versioning
+        run: |
+          REPO_NAME="${{ inputs.ecr-repository }}"
+          AWS_REGION="${{ inputs.aws-region }}"
+          
+          # Fetch the latest tags from ECR
+          IMAGE_TAGS=$(aws ecr describe-images --repository-name $REPO_NAME --region $AWS_REGION \
+            --query 'imageDetails[*].imageTags' --output json | jq -r '.[] | select(.!=null) | .[]' | sort -V)
+          
+          # Get the latest tag using semantic versioning
+          LATEST_TAG=$(echo "$IMAGE_TAGS" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | tail -n1)
+          
+          if [[ -z "$LATEST_TAG" ]]; then
+            NEW_TAG="1.0.0"  # If no valid semantic version exists, start with 1.0.0
+          else
+            MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1)
+            MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_TAG" | cut -d. -f3)
+            PATCH=$((PATCH + 1))  # Increment patch version
+            NEW_TAG="$MAJOR.$MINOR.$PATCH"
+          fi
+          
+          echo "New Image Tag: $NEW_TAG"
+          echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_ENV"
+          
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v5.1.0
@@ -71,8 +91,7 @@ jobs:
           context: ${{ inputs.dockerfile-path }}
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:${{ env.IMAGE_TAG }}
 
       - name: Image digest
         run: echo ${{ steps.build-and-push.outputs.digest }}
