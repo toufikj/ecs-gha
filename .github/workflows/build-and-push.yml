@@ -81,8 +81,8 @@ jobs:
             NEW_TAG="$MAJOR.$MINOR.$PATCH"
           fi
           
-          echo "New Image Tag: $NEW_TAG"
-          echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_ENV"
+          echo "New Image Tag: v$NEW_TAG"
+          echo "IMAGE_TAG=v$NEW_TAG" >> "$GITHUB_ENV"
           
       - name: Build and push Docker image
         id: build-and-push
