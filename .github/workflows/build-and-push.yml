@@ -103,6 +103,5 @@ jobs:
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
           tags: |
-            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:${{ env.IMAGE_TAG }}
-            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:latest
+            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:v10.10.10  #${{ env.IMAGE_TAG }}
 
