@@ -29,9 +29,15 @@ on:
         type: string
         default: TOUFIK
 
+    outputs:
+      sem_tag:
+        value: ${{ jobs.build.outputs.IMAGE_TAG }}       
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs: 
+          IMAGE_TAG: ${{ steps.versioning.outputs.IMAGE_TAG }}
 
     steps:
       - name: Checkout code
@@ -94,6 +100,7 @@ jobs:
           echo "Latest Tag: $LATEST_TAG"
           echo "New Image Tag: $NEW_TAG"
           echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
         id: build-and-push
