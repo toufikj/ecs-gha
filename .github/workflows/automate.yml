@@ -72,6 +72,20 @@ jobs:
           name: secrets
           path: secrets.json    
 
+
+  # Trigger the build and push workflow
+  # build-and-push-to-ecr:
+  #   needs: get-env-vars
+  #   uses: ./.github/workflows/build-and-push.yml
+  #   with:
+  #     ecr-registry: ${{ needs.get-env-vars.outputs.ECR_REGISTRY }}
+  #     ecr-repository: ${{ needs.get-env-vars.outputs.ECR_REPOSITORY }}
+  #     aws-region: ${{ needs.get-env-vars.outputs.AWS_REGION }}
+  #     image-tag: "${{ github.run_number }}"
+  #     dockerfile-path: "./"  # Specify the Dockerfile path
+  #     brand_name: "${{ inputs.brand_name }}"
+  #   secrets: inherit        
+
   update-ecs-task-and-service:
     needs: [create-json, get-env-vars]
     uses: ./.github/workflows/update-task.yml  # ✅ Calls reusable workflow
@@ -84,4 +98,5 @@ jobs:
       ECS_SERVICE_NAME: ${{ needs.get-env-vars.outputs.ECS_SERVICE }}
       ECS_TASK_DEFINITION: ${{ needs.get-env-vars.outputs.ECS_TASK_DEFINITION }}
       CONTAINER_NAME: ${{ needs.get-env-vars.outputs.CONTAINER_NAME }}
+      # NEW_IMAGE_TAG: ${{ needs.build-and-push-to-ecr.outputs.sem_tag }}xx
     secrets: inherit
