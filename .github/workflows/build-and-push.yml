@@ -96,6 +96,7 @@ jobs:
           echo "IMAGE_TAG=$NEW_TAG" >> "$GITHUB_ENV"
 
       - name: Build and push Docker image
+        #${{ env.IMAGE_TAG }}
         id: build-and-push
         uses: docker/build-push-action@v5.1.0
         with:
@@ -103,5 +104,5 @@ jobs:
           file: ${{ inputs.dockerfile-path }}/Dockerfile
           push: true
           tags: |
-            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:v10.10.10  #${{ env.IMAGE_TAG }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ inputs.ecr-repository }}:v10.10.10  
 
