@@ -1,6 +1,9 @@
 name: Prod Automate Build-Push, Update-Task
 
 on:
+  push:
+    branches:
+      - develop
   workflow_dispatch:
     version:
         type: choice
